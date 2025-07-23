@@ -1,0 +1,29 @@
+---
+- name: Setup application on kops cluster
+  hosts: kops-admin1
+  become: yes
+
+
+  tasks:
+    - name: Apply all manifests in kubedefs
+      ansible.builtin.shell: |
+        cd /home/ubuntu/vprofile-kubernetes/kubedefs
+        kubectl apply -f .
+      args:
+        executable: /bin/bash
+
+    - name: Get ingress name
+      ansible.builtin.shell: |
+        kubectl get ingress -o jsonpath="{.items[0].metadata.name}"
+      register: ingress_name
+      changed_when: false
+
+    - name: Describe the ingress
+      ansible.builtin.shell: |
+        kubectl describe ingress {{ ingress_name.stdout }}
+      register: ingress_description
+      changed_when: false
+
+    - name: Print ingress description
+      ansible.builtin.debug:
+        var: ingress_description.stdout_lines

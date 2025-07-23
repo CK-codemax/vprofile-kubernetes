@@ -1,0 +1,22 @@
+---
+- name: Delete Kubernetes cluster
+  hosts: kops-admin1
+  become: yes
+  vars:
+    cluster_name: kubevpro.ochukowhoro.xyz
+    zones: us-east-2a,us-east-2b
+    node_count: 2
+    node_size: t3.small
+    control_plane_size: t3.medium
+    node_volume_size: 12
+    control_plane_volume_size: 12
+    dns_zone: kubevpro.ochukowhoro.xyz
+    ssh_key_path: /home/ubuntu/.ssh/id_rsa.pub
+    kops_state_store: s3://ochukowhoro-kopsstate956-bfa8ec71
+
+  tasks:
+    - name: Delete cluster
+      shell: |
+        kops delete cluster --name={{ cluster_name }} --state={{ kops_state_store }} --yes
+      args:
+        executable: /bin/bash

@@ -1,0 +1,52 @@
+---
+- name: Provision Kubernetes cluster using Kops
+  hosts: kops-admin1
+  become: yes
+  vars:
+    cluster_name: kubevpro.ochukowhoro.xyz
+    zones: us-east-2a,us-east-2b
+    node_count: 2
+    node_size: t3.small
+    control_plane_size: t3.medium
+    node_volume_size: 12
+    control_plane_volume_size: 12
+    dns_zone: kubevpro.ochukowhoro.xyz
+    ssh_key_path: /home/ubuntu/.ssh/id_rsa.pub
+    kops_state_store: s3://ochukowhoro-kopsstate956-bfa8ec71
+
+  tasks:
+    - name: Create Kops cluster config
+      shell: |
+        kops create cluster \
+          --name={{ cluster_name }} \
+          --state={{ kops_state_store }} \
+          --zones={{ zones }} \
+          --node-count={{ node_count }} \
+          --node-size={{ node_size }} \
+          --control-plane-size={{ control_plane_size }} \
+          --node-volume-size={{ node_volume_size }} \
+          --control-plane-volume-size={{ control_plane_volume_size }} \
+          --dns-zone={{ dns_zone }} \
+          --ssh-public-key={{ ssh_key_path }}
+      args:
+        executable: /bin/bash
+
+    - name: Validate cluster config exists
+      shell: |
+        kops get cluster --name={{ cluster_name }} --state={{ kops_state_store }}
+      register: cluster_check
+      ignore_errors: yes
+
+    - name: Show cluster config output
+      debug:
+        msg: "{{ cluster_check.stdout }}"
+
+    - name: Update cluster and start creation
+      shell: |
+        kops update cluster --name={{ cluster_name }} --state={{ kops_state_store }} --yes --admin
+      when: cluster_check.rc == 0
+
+    - name: Validate cluster
+      shell: |
+        kops validate cluster --state={{ kops_state_store }} --name={{ cluster_name }} --wait 15m
+

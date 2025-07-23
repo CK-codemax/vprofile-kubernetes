@@ -1,0 +1,21 @@
+---
+- name: Setup application on kops cluster
+  hosts: kops-admin1
+  become: yes
+
+
+  tasks:
+
+    - name: Clone vprofile-kubernetes repo
+      ansible.builtin.git:
+        repo: https://github.com/CK-codemax/vprofile-kubernetes.git
+        dest: /home/ubuntu/vprofile-kubernetes
+        update: no
+
+    - name: Apply alb.yaml and dbpvc.yaml
+      ansible.builtin.shell: |
+        cd /home/ubuntu/vprofile-kubernetes/kubedefs
+        kubectl apply -f alb.yaml
+        kubectl apply -f dbpvc.yaml
+      args:
+        executable: /bin/bash

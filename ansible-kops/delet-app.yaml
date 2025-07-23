@@ -1,0 +1,22 @@
+---
+- name: Delete app
+  hosts: kops-admin1
+  become: yes
+
+  tasks:
+    - name: Remove alb
+      ansible.builtin.shell: |
+        cd /home/ubuntu/vprofile-kubernetes/kubedefs
+        kubectl delete -f alb.yaml
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
+    - name: Delete all manifests in kubedefs
+      ansible.builtin.shell: |
+        cd /home/ubuntu/vprofile-kubernetes/kubedefs
+        kubectl delete -f .
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
